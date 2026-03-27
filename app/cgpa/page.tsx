@@ -248,13 +248,16 @@ export default function Dashboard() {
                           </select>
 
                           <input
-                            type="number"
-                            value={course.unit}
-                            onChange={(e) => updateCourse(levelIndex, sem.id, course.id, "unit", Number(e.target.value))}
-                            className="bg-gray-700 p-2 w-20 rounded-lg text-white"
-                            min='0'
-                            max="5"
-                          />
+  type="number"
+  value={course.unit}
+  onChange={(e) => {
+    let value = Number(e.target.value);
+    if (value < 0) value = 0;
+    if (value > 5) value = 5;
+    updateCourse(levelIndex, sem.id, course.id, "unit", value);
+  }}
+  className="bg-gray-700 p-2 w-20 rounded-lg text-white"
+/>
 
                           <Button
                             variant="destructive"

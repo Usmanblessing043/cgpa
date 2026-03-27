@@ -12,7 +12,22 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+type Course = {
+  id: number;
+  grade: string;
+  unit: number;
+};
 
+type Semester = {
+  id: string;
+  name: string;
+  courses: Course[];
+};
+
+type Level = {
+  level: number;
+  semesters: Semester[];
+};
 const gradeMap: Record<string, number> = {
   A: 5,
   B: 4,
@@ -32,7 +47,7 @@ function calculateGPA(courses: any[]) {
   return totalUnits === 0 ? 0 : totalPoints / totalUnits;
 }
 
-const initialData = [100, 200, 300, 400].map((level) => ({
+const initialData: Level[] = [100, 200, 300, 400].map((level) => ({
   level,
   semesters: [
     { id: `${level}-1`, name: "First Semester", courses: [] },
@@ -41,7 +56,7 @@ const initialData = [100, 200, 300, 400].map((level) => ({
 }));
 
 export default function Dashboard() {
-  const [levels, setLevels] = useState(initialData);
+  const [levels, setLevels] = useState<Level[]>(initialData);
 
   const addCourse = (levelIndex: number, semId: string) => {
     setLevels((prev) =>
@@ -237,6 +252,8 @@ export default function Dashboard() {
                             value={course.unit}
                             onChange={(e) => updateCourse(levelIndex, sem.id, course.id, "unit", Number(e.target.value))}
                             className="bg-gray-700 p-2 w-20 rounded-lg text-white"
+                            min='0'
+                            max="5"
                           />
 
                           <Button

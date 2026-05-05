@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import ApolloProvider from "@/shared/lib/provider/ApolloProvider";
+import {Toaster} from 'react-hot-toast'
+
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,7 +31,29 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <ApolloProvider>
+          {children} 
+        </ApolloProvider>
+          <Toaster
+        position="top-center"
+        reverseOrder={false}
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: "rgba(0,0,0,0.9)",
+            color: "#fff",
+            borderRadius: "0.75rem",
+            padding: "0.75rem 1.25rem",
+            fontSize: "1rem",
+            textAlign: "center",
+            boxShadow: "0 4px 10px rgba(0,0,0,0.3)",
+            pointerEvents: "none"
+          },
+           
+        }}
+      />
+     </body>
     </html>
   );
 }

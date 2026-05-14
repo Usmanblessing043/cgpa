@@ -9,6 +9,7 @@ import { loginSchema, loginFormData } from '@/lib/validation';
 import { gql } from '@apollo/client';
 import { toast } from 'react-hot-toast';
 import { useMutation } from '@apollo/client/react';
+import ParticlesBackground from '@/components/particleBg';
 
 const LOGIN_USER = gql`
   mutation Login($email: String!, $password: String!) {
@@ -52,25 +53,25 @@ const Login = () => {
       toast.success(`Login Successful`);
       const { user } = data.login;
 
-      
+
       switch (user.role) {
-      case "vendor":
-        router.push("/vendor");
-        break;
-      case "rider":
-        router.push("/rider");
-        break;
-      case "customer":
-        router.push("/customer");
-        break;
-      case "admin":
-        router.push("/admin");
-        break;
-      default:
-        router.push("/");
-    }
-      
-      
+        case "vendor":
+          router.push("/vendor");
+          break;
+        case "rider":
+          router.push("/rider");
+          break;
+        case "customer":
+          router.push("/customer");
+          break;
+        case "admin":
+          router.push("/admin");
+          break;
+        default:
+          router.push("/");
+      }
+
+
     },
     onError: (err) => {
       toast.error(err.message);
@@ -82,12 +83,15 @@ const Login = () => {
   }
 
   return (
-    <div className='bg-gray-100'>
-      <div className="flex items-center flex-col gap-4 justify-center min-h-screen bg-white p-4">
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="w-full max-w-md bg-white p-8 rounded-lg shadow-xl outline outline-gray-200"
-        >
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-orange-50 via-white to-orange-100">
+      <div className="relative z-10 flex items-center flex-col gap-4 justify-center min-h-screen p-4">
+        <ParticlesBackground />
+        <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-md 
+bg-white/10 backdrop-blur-xl 
+border border-orange-300
+p-8 rounded-2xl 
+
+space-y-4">
           <h1 className="text-orange-500 text-2xl md:text-3xl font-semibold text-center">SwiftDrop</h1>
           <h3 className="text-2xl text-black font-semibold mb-2 text-center">Welcome back</h3>
           <p className="text-1xl text-gray-400 mb-3 text-center">Sign in to manage your account</p>
@@ -100,9 +104,9 @@ const Login = () => {
                 {...register("email")}
                 type="email"
                 placeholder="Enter your email"
-                className={`w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black `}
+                className={`w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 text-black `}
               />
-              <p className="text-red-500 text-sm">{errors.email?.message}</p>
+              <p className="text-red-500 text-[10px]">{errors.email?.message}</p>
             </div>
           </div>
 
@@ -114,7 +118,7 @@ const Login = () => {
                 {...register("password")}
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
-                className={`w-full pl-10 pr-10 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-black `}
+                className={`w-full pl-10 pr-10 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 text-black `}
               />
               <button
                 type="button"
@@ -123,7 +127,7 @@ const Login = () => {
               >
                 {showPassword ? <BiHide size={20} /> : <BiShow size={20} />}
               </button>
-              <p className="text-red-500 text-sm">{errors.password?.message}</p>
+              <p className="text-red-500 text-[10px]">{errors.password?.message}</p>
             </div>
           </div>
 

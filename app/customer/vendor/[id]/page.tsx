@@ -3,12 +3,13 @@ import { useParams } from "next/navigation";
 import { gql } from "@apollo/client";
 import { useQuery } from "@apollo/client/react"
 import { useState } from "react";
-import { ShoppingCart, ShoppingBag, LogOut } from "lucide-react";
+import { ShoppingCart, ShoppingBag, LogOut, Menu, X } from "lucide-react";
 import { useMutation } from "@apollo/client/react";
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 import toast from "react-hot-toast";
-
+ 
 const GET_VENDOR_POSTS = gql`
   query ($vendorId: ID!) {
     vendorPosts(vendorId: $vendorId) {
@@ -102,12 +103,14 @@ type MeResponse = {
 };
 export default function VendorPage() {
     const { id } = useParams();
+    const router = useRouter()
     const [cart, setCart] = useState<any[]>([]);
     const [showCart, setShowCart] = useState(false);
     const [search, setSearch] = useState("");
     const [loadedFromServer, setLoadedFromServer] = useState(false);
     const [deliveryAddress, setDeliveryAddress] = useState("");
     const [deliveryFee, setDeliveryFee] = useState(1500);
+    const [mobileMenu, setMobileMenu] = useState(false);
     const [createOrder] = useMutation(CREATE_ORDER);
     const { data, loading } = useQuery<VendorPostsResponse>(GET_VENDOR_POSTS, {
         variables: { vendorId: id },
@@ -230,7 +233,7 @@ export default function VendorPage() {
 
 
     const payWithPaystack = async () => {
-        if (!deliveryAddress) {
+        if (!deliveryAddress.trim()) {
             toast.error("Please enter delivery address");
             return;
         }
@@ -242,7 +245,7 @@ export default function VendorPage() {
         const paystack = new PaystackPop();
 
         paystack.newTransaction({
-            key: "pk_test_5c1a4920ee1c6c1d4ce3d260b0fb58e016265605",
+           key: process.env.NEXT_PUBLIC_PAYSTACK_KEY!,
             email: "usmanblessing043@email.com",
             amount: total * 100,
             currency: "NGN",
@@ -274,6 +277,7 @@ export default function VendorPage() {
 
                     setCart([]);
                     setShowCart(false);
+                    router.push('/customer/order')
                 } catch (err: any) {
                     toast.error(err.message);
                 }
@@ -283,74 +287,177 @@ export default function VendorPage() {
             },
         });
     };
+    function gotodashboard(params: any) {
+        router.push('/customer')
+
+    }
+    function gotoorder(params: any) {
+        router.push('/customer/order')
+
+    }
+    const handlelogout = async () => {
+        try {
+            await fetch("/api/logout", { method: "POST" });
+            toast.success("Logout successful");
+            router.push("/login");
+        } catch (err: any) {
+            toast.error("Logout failed");
+            console.error(err);
+        }
+    };
     return (
         <div className="min-h-screen bg-[#FFF8F1]">
 
 
 
 
-            <div className="w-full flex items-center justify-between px-6 py-3 bg-white border-b sticky top-0 backdrop-blur-md z-100">
+            <div className="w-full flex items-center justify-between px-4 md:px-6 py-3 bg-white border-b sticky top-0 backdrop-blur-md z-50">
 
+                {/* LEFT */}
+                <div className="flex items-center gap-2 md:gap-3">
+                    <h1 className="text-lg md:text-xl bg-clip-text text-transparent bg-gradient-to-r from-orange-600 via-orange-600 to-orange-400 font-bold">
+                        SwiftDrop
+                    </h1>
 
-                <div className="flex items-center gap-3">
-                    <h1 className="text-xl bg-clip-text text-transparent bg-gradient-to-r from-orange-600 via-orange-600 to-orange-400 font-bold">SwiftDrop</h1>
-
-                    <div className="bg-yellow-100 text-orange-500 px-3 py-1 rounded-full text-sm font-medium outline outline-amber-300">
+                    <div className="bg-yellow-100 text-orange-500 px-2 md:px-3 py-1 rounded-full text-[10px] sm:text-xs md:text-sm font-medium outline outline-amber-300">
                         Customer
                     </div>
                 </div>
 
-                <div className='flex gap-4 items-center'>
+                {/* DESKTOP MENU */}
+                <div className="hidden lg:flex gap-3 items-center">
+
                     <button
                         onClick={() => setShowCart(true)}
                         className="relative px-4 py-2 text-sm font-medium text-white rounded-lg bg-black"
                     >
                         <ShoppingCart className="w-4 h-4 inline-block mr-2" />
-
                         Cart
 
-                        {/* BADGE */}
                         {cart.length > 0 && (
                             <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
                                 {cart.length}
                             </span>
                         )}
                     </button>
+
                     <button
-                        className="px-4 py-2 text-sm font-medium text-white  rounded-lg  bg-black"
+                        onClick={gotodashboard}
+                        className="px-4 py-2 text-sm font-medium text-white rounded-lg bg-black"
                     >
                         Dashboard
                     </button>
+
                     <button
-                        className="px-4 py-2 text-sm font-medium text-white  rounded-lg  bg-black"
+                        onClick={gotoorder}
+                        className="px-4 py-2 text-sm font-medium text-white rounded-lg bg-black"
                     >
                         My Orders
                     </button>
-                    <div> <LogOut></LogOut></div>
+
+                    <button
+                        onClick={handlelogout}
+                        className="w-10 h-10 rounded-full  flex items-center justify-center hover:bg-red-50 transition"
+                    >
+                        <LogOut size={18} />
+                    </button>
                 </div>
+
+                {/* MOBILE RIGHT */}
+                <div className="flex lg:hidden items-center gap-2">
+
+                    {/* MOBILE CART */}
+                    <button
+                        onClick={() => setShowCart(true)}
+                        className="relative w-10 h-10 rounded-lg bg-black text-white flex items-center justify-center"
+                    >
+                        <ShoppingCart className="w-5 h-5" />
+
+                        {cart.length > 0 && (
+                            <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full">
+                                {cart.length}
+                            </span>
+                        )}
+                    </button>
+
+                    {/* MENU BUTTON */}
+                    <button
+                        onClick={() => setMobileMenu(!mobileMenu)}
+                        className="w-10 h-10 rounded-lg border flex items-center justify-center"
+                    >
+                        {mobileMenu ? <X size={20} /> : <Menu size={20} />}
+                    </button>
+                </div>
+
+                {/* MOBILE MENU */}
+                {mobileMenu && (
+                    <div className="absolute top-16 right-4 bg-white border shadow-xl rounded-2xl p-4 flex flex-col gap-3 w-56 lg:hidden">
+
+                        <button
+                            onClick={() => {
+                                gotodashboard("");
+                                setMobileMenu(false);
+                            }}
+                            className="w-full py-3 rounded-xl bg-black text-white text-sm"
+                        >
+                            Dashboard
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                gotoorder("");
+                                setMobileMenu(false);
+                            }}
+                            className="w-full py-3 rounded-xl bg-black text-white text-sm"
+                        >
+                            My Orders
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                handlelogout();
+                                setMobileMenu(false);
+                            }}
+                            className="w-full py-3 rounded-xl bg-red-500 text-white text-sm"
+                        >
+                            Logout
+                        </button>
+                    </div>
+                )}
             </div>
 
 
-            <div className="max-w-7xl mx-auto px-6 py-10 pb-32">
+           <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-10 pb-32">
 
 
                 <div className="md:col-span-2 space-y-4">
-                    <div className=" py-6 px-2  bg-gradient-to-r  from-orange-500 to-orange-400 rounded-xl">
+                   <div className="py-5 md:py-6 px-4 md:px-6 bg-gradient-to-r from-orange-500 to-orange-400 rounded-2xl">
 
+                        {loadd ? (
+                            <div className="animate-pulse space-y-3">
+                                <div className="h-7 w-56 bg-orange-300 rounded"></div>
 
-                        <h1 className="text-2xl font-bold">
-                            {datas?.vendor?.businessName.toUpperCase()}
-                        </h1>
+                                <div className="h-3 w-56 bg-orange-200 rounded"></div>
+                            </div>
+                        ) : (
+                            <>
+                              <h1 className="text-xl md:text-2xl font-bold break-words">
+                                    {datas?.vendor?.businessName?.toUpperCase()}
+                                </h1>
 
-                        <p className="text-black text-[11px] mt-1">
-                            {datas?.vendor?.businessAddress}
-                        </p>
+                               <p className="text-black text-[11px] md:text-xs mt-1 break-words">
+                                    {datas?.vendor?.businessAddress}
+                                </p>
+                            </>
+                        )}
                         <p className="text-black text-sm mt-1">
                             Browse available products
                         </p>
                     </div>
 
-                    <h2 className="font-semibold text-lg">Menu</h2>
+                    <h2 className="font-semibold text-lg md:text-xl">
+  Menu
+</h2>
                     <div className="mb-6">
                         <input
                             type="text"
@@ -384,7 +491,7 @@ export default function VendorPage() {
                             ))}
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                             {filteredProducts?.length === 0 ? (
                                 <div className="col-span-full text-center py-20">
                                     <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -406,7 +513,7 @@ export default function VendorPage() {
                                             className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 group"
                                         >
 
-                                            <div className="relative h-60 overflow-hidden bg-gray-100">
+                                            <div className="relative h-52 sm:h-56 md:h-60 overflow-hidden bg-gray-100">
                                                 <img
                                                     src={item.image}
                                                     alt={item.name}
@@ -415,17 +522,17 @@ export default function VendorPage() {
                                             </div>
 
 
-                                            <div className="p-5 flex flex-col gap-3">
+                                           <div className="p-4 md:p-5 flex flex-col gap-3">
                                                 <div>
-                                                    <h3 className="font-semibold text-lg text-gray-800">
+                                                    <h3 className="font-semibold text-base md:text-lg text-gray-800 truncate">
                                                         {item.name}
                                                     </h3>
                                                     <p className="text-sm text-gray-500">
-                                                        Fresh product from vendor
+                                                        In Stock
                                                     </p>
                                                 </div>
 
-                                                <div className="flex items-center justify-between mt-2">
+                                                <div className="flex items-center justify-between gap-3 mt-2">
                                                     <span className="text-xl font-bold text-orange-600">
                                                         ₦{item.price}
                                                     </span>
@@ -451,7 +558,7 @@ export default function VendorPage() {
                                                     ) : (
                                                         <button
                                                             onClick={() => addToCart(item)}
-                                                            className="px-5 py-2 bg-orange-500 text-white rounded-xl text-sm hover:bg-orange-600 transition"
+                                                           className="px-4 md:px-5 py-2 bg-orange-500 text-white rounded-xl text-xs md:text-sm hover:bg-orange-600 transition whitespace-nowrap"
                                                         >
                                                             Add to Cart
                                                         </button>
@@ -479,8 +586,8 @@ export default function VendorPage() {
             )}
 
             {cart.length > 0 && showCart && (
-                <div className="fixed bottom-6 right-6 w-full max-w-sm z-50">
-                    <div className="bg-white border shadow-2xl rounded-2xl p-4 space-y-4">
+                <div className="fixed bottom-0 sm:bottom-6 right-0 sm:right-6 w-full sm:max-w-sm z-50">
+                    <div className="bg-white border shadow-2xl rounded-t-3xl sm:rounded-2xl p-4 space-y-4">
 
                         {/* HEADER */}
                         <div className="flex items-center justify-between">
@@ -514,13 +621,13 @@ export default function VendorPage() {
                         </div>
 
 
-                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                        <div className="space-y-2 max-h-52 overflow-y-auto">
                             {cart.map((item) => (
                                 <div
                                     key={item.id}
-                                    className="flex justify-between text-sm text-gray-700"
+                                   className="flex justify-between text-sm text-gray-700"
                                 >
-                                    <span className="truncate w-2/3">
+                                    <span className="truncate w-3/4">
                                         {item.name}
                                     </span>
                                     <span className="font-medium">
@@ -531,7 +638,7 @@ export default function VendorPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-xs text-gray-500">
+                            <label className="text-xs text-gray-500 required">
                                 Delivery Address
                             </label>
 

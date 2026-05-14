@@ -33,19 +33,19 @@ const orderSchema = new mongoose.Schema(
       default: "pending",
     },
     rider: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
-deliveryOTP: String,
-otpExpires: Date,
-rejectedBy: [
-  { type: mongoose.Schema.Types.ObjectId, ref: "User" }
-],
-statusHistory: [
-  {
-    status: String,
-    time: { type: Date, default: Date.now },
-  },
-],
+    deliveryOTP: String,
+    otpExpires: Date,
+    rejectedBy: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "User" }
+    ],
+    statusHistory: [
+      {
+        status: String,
+        time: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true }
 );
 
-export const OrderModel =  mongoose.models.Order || mongoose.model("Order", orderSchema);
+export const OrderModel = mongoose.models.Order || mongoose.model("Order", orderSchema);

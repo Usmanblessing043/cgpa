@@ -3,10 +3,11 @@ import React from 'react'
 import { gql } from '@apollo/client'
 import { useQuery, useMutation } from '@apollo/client/react';
 import { useState, useEffect } from 'react';
-import { DollarSign, Clock, Bike, CircleCheckBig, LogOut } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { DollarSign, Clock, Bike, CircleCheckBig, LogOut, Menu, X } from "lucide-react";
+
 import { TailSpin } from "react-loader-spinner";
 import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 
 
@@ -135,10 +136,14 @@ type CompletedResponse = {
   completedRiderOrders: Order[];
 };
 export default function RiderPage() {
+ 
   const [userName, setUserName] = useState("");
   const [otp, setOtp] = useState("");
   const [otpArray, setOtpArray] = useState(["", "", "", "", "", ""]);
   const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
+  
+   const router  = useRouter()
+    const [menuOpen, setMenuOpen] = useState(false);
 
   const { data: meData } = useQuery<MeResponse>(ME);
   const { data, refetch } = useQuery<RiderOrdersResponse>(GET_AVAILABLE_ORDERS);
@@ -238,31 +243,73 @@ const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
     prev?.focus();
   }
 };
+const handlelogout = async () => {
+    try {
+      await fetch("/api/logout", { method: "POST" });
+      toast.success("Logout successful");
+      router.push("/login");
+    } catch (err: any) {
+      toast.error("Logout failed");
+      console.error(err);
+    }
+  };
+
   return (
     <div className="bg-[#FFF8F1] min-h-screen">
 
-      <div className="w-full flex items-center justify-between px-6 py-3 bg-white border-b sticky top-0 backdrop-blur-md z-100">
+      <div className="w-full flex items-center justify-between px-4 md:px-6 py-3 bg-white border-b sticky top-0 backdrop-blur-md z-50">
 
-
+        {/* Logo */}
         <div className="flex items-center gap-3">
-          <h1 className="text-xl bg-clip-text text-transparent bg-gradient-to-r from-orange-600 via-orange-600 to-orange-400 font-bold">SwiftDrop</h1>
+          <h1 className="text-xl bg-clip-text text-transparent bg-gradient-to-r from-orange-600 via-orange-600 to-orange-400 font-bold">
+            SwiftDrop
+          </h1>
 
           <div className="bg-yellow-100 text-orange-500 px-3 py-1 rounded-full text-sm font-medium outline outline-amber-300">
             Rider
           </div>
         </div>
 
-        <div className='flex gap-4'>
+        {/* Desktop logout */}
+        <button
+          className="hidden md:flex items-center gap-2 text-gray-700 hover:text-red-500 transition"
+          onClick={handlelogout}
+        >
+          <LogOut size={20} />
 
-          <LogOut></LogOut>
-        </div>
+        </button>
+
+        {/* Mobile menu button */}
+        <button
+          className="md:hidden"
+          onClick={() => setMenuOpen(!menuOpen)}
+        >
+          {menuOpen ? <X /> : <Menu />}
+        </button>
+
+        {/* Mobile dropdown */}
+        {menuOpen && (
+          <div className="absolute top-16 right-4 bg-white shadow-lg rounded-lg w-40 p-3 flex flex-col gap-3 md:hidden z-50">
+
+            <button
+              className="flex items-center justify-center gap-2 text-gray-700 hover:text-red-500"
+              onClick={handlelogout}
+            >
+              <LogOut size={18} />
+              Logout
+            </button>
+
+          </div>
+        )}
       </div>
-      <div className='px-30 mt-6'>
-        <h1>Welcome, {userName}</h1>
+     <div className="px-4 sm:px-6 md:px-10 lg:px-16 xl:px-24 mt-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 break-words">
+  Welcome, {userName}
+</h1>
       </div>
 
 
-      <div className="px-30 mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="px-4 sm:px-6 md:px-10 lg:px-16 xl:px-24 mt-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
 
 
         <div className="group relative bg-white p-6 rounded-xl shadow-sm border cursor-pointer overflow-hidden">
@@ -312,8 +359,7 @@ const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
 
 
 
-      <div className="px-30 mt-8 grid md:grid-cols-2 gap-8">
-
+      <div className="px-4 sm:px-6 md:px-10 lg:px-16 xl:px-24 mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* AVAILABLE */}
         <div>
           <h2 className="font-semibold mb-4 text-gray-800 text-lg">
@@ -405,7 +451,7 @@ const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
                   {/* HEADER */}
                   <div className="flex justify-between items-center mb-3">
                     <p className="font-semibold text-gray-900 text-sm">
-                      Order #{order.id.slice(-6)}
+                      Order: {order.id.slice(-6)}
                     </p>
 
                     <span
@@ -473,7 +519,7 @@ const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
       </div>
 
 
-      <div className="px-30 mt-12">
+      <div className="px-4 sm:px-6 md:px-10 lg:px-16 xl:px-24 mt-12 pb-10">
         <h2 className="font-semibold mb-4 text-gray-800 text-lg">
           Delivery History
         </h2>
@@ -483,7 +529,7 @@ const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
             No completed deliveries yet
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 gap-4">
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {completedOrders.map((order: any) => (
               <div
                 key={order.id}
@@ -565,7 +611,7 @@ const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
       <div className="my-5 border-t" />
 
       {/* OTP */}
-      <div className="flex justify-between gap-2">
+      <div className="flex justify-center gap-2 flex-wrap">
         {otpArray.map((digit, index) => (
           <input
             key={index}
@@ -576,7 +622,7 @@ const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
             onChange={(e) => handleOtpChange(e.target.value, index)}
             onKeyDown={(e) => handleKeyDown(e, index)}
             className="
-              w-12 h-14 
+              w-10 h-12 sm:w-12 sm:h-14
               text-center text-xl font-bold 
               rounded-xl border 
               focus:outline-none 
@@ -595,7 +641,7 @@ const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
       </p>
 
       {/* Buttons */}
-      <div className="flex gap-3 mt-6">
+      <div className="flex flex-col sm:flex-row gap-2 mt-4">
         <button
           onClick={() => {
             setSelectedOrder(null);

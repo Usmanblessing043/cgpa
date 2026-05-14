@@ -3,9 +3,10 @@ import React from 'react'
 import { gql } from '@apollo/client'
 import { useQuery } from '@apollo/client/react';
 import { useState, useEffect } from 'react';
-import { Box, Utensils, ShoppingCart, Shirt, Laptop, Store, MapPin, LogOut } from "lucide-react";
+import { Box, Utensils, ShoppingCart, Shirt, Laptop, Store, MapPin, LogOut, Menu, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { TailSpin } from "react-loader-spinner";
+import toast from 'react-hot-toast';
 
 
 
@@ -52,6 +53,7 @@ const page = () => {
   const router = useRouter();
   const [userName, setUserName] = useState("");
   const [search, setSearch] = useState("");
+  const [mobileMenu, setMobileMenu] = useState(false);
   const categories = [
     { name: "All", icon: Box },
     { name: "Restaurant", icon: Utensils },
@@ -63,7 +65,7 @@ const page = () => {
 
   const [active, setActive] = useState("All");
 
-  const { data, error } = useQuery<MeResponse>(ME);
+  const { data, error, loading: userLoading } = useQuery<MeResponse>(ME);
   const { data: vendorData, loading } = useQuery<VendorResponse>(GET_VENDORS);
   useEffect(() => {
     if (data?.me?.name) {
@@ -108,35 +110,94 @@ const page = () => {
     router.push('/customer/order')
 
   }
+  const handlelogout = async () => {
+    try {
+      await fetch("/api/logout", { method: "POST" });
+      toast.success("Logout successful");
+      router.push("/login");
+    } catch (err: any) {
+      toast.error("Logout failed");
+      console.error(err);
+    }
+  };
   return (
     <div className='bg-[#FFF8F1]  min-h-screen '>
-      <div className="w-full flex items-center justify-between px-6 py-3 bg-white border-b sticky top-0 backdrop-blur-md z-100">
+      <div className="w-full flex items-center justify-between px-4 md:px-6 py-3 bg-white border-b sticky top-0 backdrop-blur-md z-50">
 
+        {/* LEFT */}
+        <div className="flex items-center gap-2 md:gap-3">
+          <h1 className="text-lg md:text-xl bg-clip-text text-transparent bg-gradient-to-r from-orange-600 via-orange-600 to-orange-400 font-bold">
+            SwiftDrop
+          </h1>
 
-        <div className="flex items-center gap-3">
-          <h1 className="text-xl bg-clip-text text-transparent bg-gradient-to-r from-orange-600 via-orange-600 to-orange-400 font-bold">SwiftDrop</h1>
-
-          <div className="bg-yellow-100 text-orange-500 px-3 py-1 rounded-full text-sm font-medium outline outline-amber-300">
+          <div className="bg-yellow-100 text-orange-500 px-2 md:px-3 py-1 rounded-full text-[10px] sm:text-xs md:text-sm font-medium outline outline-amber-300">
             Customer
           </div>
         </div>
 
-        <div className='flex gap-4 items-center'>
+        {/* DESKTOP MENU */}
+        <div className="hidden md:flex gap-4 items-center">
           <button
             onClick={gotoorder}
-            className="px-4 py-2 text-sm font-medium text-white  rounded-lg  bg-black"
+            className="px-4 py-2 text-sm font-medium text-white rounded-lg bg-black hover:bg-gray-800 transition"
           >
             My Orders
           </button>
-          <div> <LogOut></LogOut></div>
-        </div>
-      </div>
 
-      <div className="px-6 mt-6 flex justify-center">
+          <button
+            onClick={handlelogout}
+            className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-red-50 transition"
+          >
+            <LogOut size={18} />
+          </button>
+        </div>
+
+        {/* MOBILE MENU BUTTON */}
+        <button
+          onClick={() => setMobileMenu(!mobileMenu)}
+          className="md:hidden w-10 h-10 rounded-lg border flex items-center justify-center"
+        >
+          {mobileMenu ? <X size={20} /> : <Menu size={20} />}
+        </button>
+
+        {/* MOBILE DROPDOWN */}
+        {mobileMenu && (
+          <div className="absolute top-16 right-4 bg-white border shadow-xl rounded-2xl p-4 flex flex-col gap-3 w-52 md:hidden">
+
+            <button
+              onClick={() => {
+                gotoorder("");
+                setMobileMenu(false);
+              }}
+              className="w-full py-3 rounded-xl bg-black text-white text-sm"
+            >
+              My Orders
+            </button>
+
+            <button
+              onClick={() => {
+                handlelogout();
+                setMobileMenu(false);
+              }}
+              className="w-full py-3 rounded-xl bg-red-500 text-white text-sm"
+            >
+              Logout
+            </button>
+          </div>
+        )}
+      </div>
+      <div className="px-4 md:px-6 mt-6 flex justify-center">
         <div className="bg-gradient-to-r from-orange-500 to-orange-400 rounded-2xl p-6 md:p-10 text-white w-full ">
 
 
-          <p className="text-sm opacity-90 text-black">Welcome {userName}</p>
+          <p className="text-sm opacity-90 text-black flex items-center gap-2">
+            Welcome{" "}
+            {userLoading ? (
+              <span className="w-15 h-4 bg-orange-300 animate-pulse rounded"></span>
+            ) : (
+              userName
+            )}
+          </p>
           <h1 className="text-2xl md:text-3xl font-bold mt-1">
             What would you like to order?
           </h1>
@@ -174,7 +235,7 @@ const page = () => {
         </div>
       </div>
 
-      <div className="flex gap-3 flex-wrap my-3 mx-6">
+      <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3 my-4 mx-4 md:mx-6">
         {categories.map((cat) => {
           const Icon = cat.icon;
 
@@ -182,12 +243,12 @@ const page = () => {
             <button
               key={cat.name}
               onClick={() => setActive(cat.name)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-sm transition duration-300
-          ${active === cat.name
+              className={`flex items-center justify-center gap-2 px-3 py-3 rounded-xl border text-xs sm:text-sm transition duration-300 w-full sm:w-auto
+${active === cat.name
                   ? "bg-orange-500 text-white border-orange-500"
                   : "bg-white text-gray-600 border-gray-200 hover:bg-orange-500 hover:text-white hover:border-orange-500"
                 }
-        `}
+`}
             >
               <Icon size={16} />
               {cat.name}
@@ -197,7 +258,7 @@ const page = () => {
       </div>
 
 
-      <div className="px-6 mt-6">
+      <div className="px-4 md:px-6 mt-6">
         <h2 className="text-lg font-semibold mb-4 text-black">
           Vendors Near You
         </h2>
@@ -229,7 +290,7 @@ const page = () => {
             </button>
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 md:gap-6">
             {filteredVendors?.map((vendor: any) => (
               <div
                 key={vendor.id}

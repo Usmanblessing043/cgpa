@@ -23,7 +23,7 @@ const connect = async () => {
 
         await usermodel.create({
           name: "Admin",
-          email: "admin@gmail.com",
+          email: email,
           password: hashedPassword,
           role: "admin",
           phone: "08000000000",

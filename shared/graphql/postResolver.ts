@@ -21,21 +21,67 @@ const requireAdmin = (context: any) => {
     }
 };
 
-export const sendEmail = async (to: string, text: string) => {
+export const sendEmail = async (to: string, otp: string) => {
     const transporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
-
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS,
         },
     });
 
     await transporter.sendMail({
-        from: process.env.EMAIL_USER,
+        from: `"SwiftDrop" <${process.env.EMAIL_USER}>`,
         to,
-        subject: "Delivery Verification Code",
-        text,
+        subject: "Your Delivery Verification Code",
+        html: `
+      <div style="font-family: Arial, sans-serif; background:#f9fafb; padding:20px;">
+        
+        <div style="max-width:500px; margin:auto; background:white; padding:30px; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.1);">
+          
+          
+          <h2 style="text-align:center; color:#ea580c; margin-bottom:10px;">
+            SwiftDrop 
+          </h2>
+
+          <p style="text-align:center; color:#6b7280; font-size:14px;">
+            Delivery Verification Code
+          </p>
+
+          <!-- OTP Box -->
+          <div style="margin:30px 0; text-align:center;">
+            <span style="
+              display:inline-block;
+              padding:15px 25px;
+              font-size:28px;
+              letter-spacing:6px;
+              font-weight:bold;
+              color:#111827;
+              background:#fff7ed;
+              border:2px dashed #fb923c;
+              border-radius:10px;
+            ">
+              ${otp}
+            </span>
+          </div>
+
+          <!-- Message -->
+          <p style="color:#374151; font-size:14px; text-align:center;">
+            Use this code to confirm your delivery.
+          </p>
+
+          <p style="color:#ef4444; font-size:13px; text-align:center; margin-top:10px;">
+           This code will expire in 5 minutes.
+          </p>
+
+          <!-- Footer -->
+          <div style="margin-top:30px; text-align:center; font-size:12px; color:#9ca3af;">
+            If you didn’t request this, please ignore this email.
+          </div>
+
+        </div>
+      </div>
+    `,
     });
 };
 
@@ -143,6 +189,45 @@ export const postresolvers = {
                 totalVendors,
                 totalRiders,
                 revenue: revenue[0]?.total || 0,
+            };
+        },
+
+        vendorStats: async (_: any, __: any, context: any) => {
+            if (!context.user) {
+                throw new GraphQLError("Unauthorized");
+            }
+
+            const vendorId = context.user.id;
+
+            const DELIVERY_FEE = 1500;
+
+            const orders = await OrderModel.find({
+                vendor: vendorId,
+                status: "delivered",
+            });
+
+            const revenue = orders.reduce((acc, order) => {
+                return acc + (order.total - DELIVERY_FEE);
+            }, 0);
+
+            const totalOrders = await OrderModel.countDocuments({
+                vendor: vendorId,
+            });
+
+            const pendingOrders = await OrderModel.countDocuments({
+                vendor: vendorId,
+                status: "pending",
+            });
+
+            const totalProducts = await PostModel.countDocuments({
+                author: vendorId,
+            });
+
+            return {
+                totalOrders,
+                revenue,
+                pendingOrders,
+                totalProducts,
             };
         },
     },
@@ -327,23 +412,23 @@ export const postresolvers = {
             const order = await OrderModel.findById(id).populate("customer", "email");
 
             if (!order) throw new GraphQLError("Order not found");
-             if (order.rider.toString() !== context.user.id) {
-    throw new GraphQLError("Not your order");
-  }
+            if (order.rider.toString() !== context.user.id) {
+                throw new GraphQLError("Not your order");
+            }
 
             const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
             order.deliveryOTP = otp;
-            order.otpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 mins
+            order.otpExpires = new Date(Date.now() + 5 * 60 * 1000);
 
             await order.save();
 
 
-            await sendEmail(order.customer.email, `Your delivery code is ${otp}`);
+            await sendEmail(order.customer.email, otp);
 
             return "OTP sent";
         },
-        verifyDeliveryOTP: async (_: any, { id, otp }: any, context:any) => {
+        verifyDeliveryOTP: async (_: any, { id, otp }: any, context: any) => {
             if (!context.user) throw new GraphQLError("Unauthorized");
             const order = await OrderModel.findById(id);
 

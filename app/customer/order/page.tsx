@@ -2,10 +2,12 @@
 import React from 'react'
 import { gql } from '@apollo/client'
 import { useMutation, useQuery } from '@apollo/client/react'
-import { Package, Search, ChevronDown, LogOut,Clock, CheckCircle2, ChefHat, PackageCheck, Truck, Home, XCircle, } from "lucide-react";
+import { Package, Search, ChevronDown, LogOut, Menu, X } from "lucide-react";
 import { useState, useEffect } from 'react';
 import { statusConfig } from '@/lib/config';
 import { motion } from "framer-motion";
+import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 
 
@@ -51,10 +53,12 @@ type MyOrdersResponse = {
   myOrders: Order[];
 };
 export default function MyOrders() {
+  const router = useRouter()
   const { data, loading } = useQuery<MyOrdersResponse>(GET_MY_ORDERS);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [open, setOpen] = useState(false);
+  const [mobileMenu, setMobileMenu] = useState(false);
 
   const options = [
     { label: "All Status", value: "all" },
@@ -67,22 +71,22 @@ export default function MyOrders() {
   ];
 
 
-  
-const timeAgo = (t?: string) => {
-  if (!t) return "No time";
 
-  const date = new Date(t);
+  const timeAgo = (t?: string) => {
+    if (!t) return "No time";
 
-  if (isNaN(date.getTime())) return "Invalid date";
+    const date = new Date(t);
 
-  return date.toLocaleString("en-NG", {
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-    year: "2-digit"
-  });
-};
+    if (isNaN(date.getTime())) return "Invalid date";
+
+    return date.toLocaleString("en-NG", {
+      day: "2-digit",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+      year: "2-digit"
+    });
+  };
 
 
 
@@ -100,39 +104,97 @@ const timeAgo = (t?: string) => {
     return matchesSearch && matchesStatus;
   });
 
+  function gotodashboard(params: any) {
+    router.push('/customer')
 
+  }
+  const handlelogout = async () => {
+    try {
+      await fetch("/api/logout", { method: "POST" });
+      toast.success("Logout successful");
+      router.push("/login");
+    } catch (err: any) {
+      toast.error("Logout failed");
+      console.error(err);
+    }
+  };
   return (
     <div className="min-h-screen bg-[#FFF8F1]">
 
 
 
-      <div className="w-full flex items-center justify-between px-6 py-3 bg-white border-b sticky top-0 backdrop-blur-md z-100">
+      <div className="w-full flex items-center justify-between px-4 md:px-6 py-3 bg-white border-b sticky top-0 backdrop-blur-md z-50">
 
+        {/* LEFT */}
+        <div className="flex items-center gap-2 md:gap-3">
+          <h1 className="text-lg md:text-xl bg-clip-text text-transparent bg-gradient-to-r from-orange-600 via-orange-600 to-orange-400 font-bold">
+            SwiftDrop
+          </h1>
 
-        <div className="flex items-center gap-3">
-          <h1 className="text-xl bg-clip-text text-transparent bg-gradient-to-r from-orange-600 via-orange-600 to-orange-400 font-bold">SwiftDrop</h1>
-
-          <div className="bg-yellow-100 text-orange-500 px-3 py-1 rounded-full text-sm font-medium outline outline-amber-300">
+          <div className="bg-yellow-100 text-orange-500 px-2 md:px-3 py-1 rounded-full text-[10px] sm:text-xs md:text-sm font-medium outline outline-amber-300">
             Customer
           </div>
         </div>
 
-        <div className='flex gap-4 items-center'>
+        {/* DESKTOP MENU */}
+        <div className="hidden md:flex gap-4 items-center">
           <button
-            
-            className="px-4 py-2 text-sm font-medium text-white  rounded-lg  bg-black"
+            onClick={gotodashboard}
+            className="px-4 py-2 text-sm font-medium text-white rounded-lg bg-black"
           >
             Dashboard
           </button>
-          <div> <LogOut></LogOut></div>
-        </div>
-      </div>
-      <div className="flex items-center px-6 py-4 justify-between">
-        <p className="text-2xl font-semibold">Order History</p>
 
-        <div className="flex gap-3 items-center">
+          <button
+            onClick={handlelogout}
+            className="w-10 h-10 rounded-full  flex items-center justify-center hover:bg-red-50 transition"
+          >
+            <LogOut size={18} />
+          </button>
+        </div>
+
+        {/* MOBILE BUTTON */}
+        <button
+          onClick={() => setMobileMenu(!mobileMenu)}
+          className="md:hidden w-10 h-10 rounded-lg border flex items-center justify-center"
+        >
+          {mobileMenu ? <X size={20} /> : <Menu size={20} />}
+        </button>
+
+        {/* MOBILE MENU */}
+        {mobileMenu && (
+          <div className="absolute top-16 right-4 bg-white border shadow-xl rounded-2xl p-4 flex flex-col gap-3 w-52 md:hidden">
+
+            <button
+              onClick={() => {
+                gotodashboard("");
+                setMobileMenu(false);
+              }}
+              className="w-full py-3 rounded-xl bg-black text-white text-sm"
+            >
+              Dashboard
+            </button>
+
+            <button
+              onClick={() => {
+                handlelogout();
+                setMobileMenu(false);
+              }}
+              className="w-full py-3 rounded-xl bg-red-500 text-white text-sm"
+            >
+              Logout
+            </button>
+          </div>
+        )}
+      </div>
+      <div className="flex flex-col lg:flex-row lg:items-center gap-4 px-4 md:px-6 py-4 justify-between">
+        <p className="text-xl md:text-2xl font-semibold">
+          Order History
+        </p>
+
+        <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto items-center">
           {/* SEARCH BOX */}
-          <div className="relative">
+          <div className="relative w-full sm:w-auto">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
 
             <input
@@ -140,11 +202,11 @@ const timeAgo = (t?: string) => {
               placeholder="Search orders..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 pr-3 py-2 w-64 border rounded-lg text-sm outline-none 
-        focus:ring-2 focus:ring-orange-400 bg-white shadow-sm"
+              className="pl-9 pr-3 py-3 w-full sm:w-64 border rounded-lg text-sm outline-none 
+focus:ring-2 focus:ring-orange-400 bg-white shadow-sm"
             />
           </div>
-          <div className="relative w-48">
+          <div className="relative w-full sm:w-48">
             {/* SELECT BUTTON */}
             <button
               onClick={() => setOpen(!open)}
@@ -185,16 +247,16 @@ const timeAgo = (t?: string) => {
 
 
 
-      <div className='px-30 space-y-3'>
+      <div className='px-4 md:px-8 lg:px-20 xl:px-32 space-y-4 pb-10'>
 
         {loading ? (
-  
+
           [...Array(3)].map((_, i) => (
             <div
               key={i}
               className="bg-white rounded-xl shadow border p-5 space-y-4 animate-pulse"
             >
-             
+
               <div className="flex justify-between">
                 <div className="space-y-2">
                   <div className="h-3 w-32 bg-gray-200 rounded" />
@@ -203,22 +265,22 @@ const timeAgo = (t?: string) => {
                 <div className="h-6 w-16 bg-gray-200 rounded-full" />
               </div>
 
-              
+
               <div className="space-y-2">
                 <div className="h-3 w-full bg-gray-200 rounded" />
                 <div className="h-3 w-5/6 bg-gray-200 rounded" />
               </div>
 
-              
+
               <div className="h-3 w-2/3 bg-gray-200 rounded" />
 
-              
+
               <div className="flex justify-between pt-3">
                 <div className="h-3 w-16 bg-gray-200 rounded" />
                 <div className="h-3 w-20 bg-gray-200 rounded" />
               </div>
 
-              
+
               <div className="flex justify-between mt-4">
                 {[...Array(6)].map((_, j) => (
                   <div key={j} className="w-4 h-4 bg-gray-200 rounded-full" />
@@ -228,7 +290,7 @@ const timeAgo = (t?: string) => {
           ))
         ) : filteredOrders?.length === 0 ? (
 
-          
+
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <div className="bg-orange-50 p-5 rounded-full mb-4 shadow-sm">
               <Package className="w-10 h-10 text-orange-400" />
@@ -253,10 +315,10 @@ const timeAgo = (t?: string) => {
           filteredOrders?.map((order: any) => (
             <div
               key={order.id}
-              className="bg-white rounded-xl shadow border p-5 space-y-4"
+              className="bg-white rounded-xl shadow border p-4 md:p-5 space-y-4"
             >
               {/* TOP */}
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
                 <div>
                   <p className="text-sm text-gray-500">
                     Order ID: {order.id.slice(0, 8)}
@@ -272,8 +334,8 @@ const timeAgo = (t?: string) => {
               {/* ITEMS */}
               <div className="space-y-2">
                 {order.items.map((item: any, i: number) => (
-                  <div key={i} className="flex justify-between text-sm">
-                    <span>
+                  <div key={i} className="flex justify-between gap-3 text-sm">
+                    <span className="truncate">
                       {item.name} x{item.qty}
                     </span>
                     <span>₦{item.price * item.qty}</span>
@@ -288,13 +350,13 @@ const timeAgo = (t?: string) => {
               </div>
 
               {/* TOTAL */}
-              <div className="flex justify-between font-semibold border-t pt-3">
+              <div className="flex items-center justify-between font-semibold border-t pt-3 text-sm md:text-base">
                 <span>Total</span>
                 <span className="text-orange-500">₦{order.total}</span>
               </div>
 
               {/* TRACKING BAR */}
-             <OrderProgress history={order.statusHistory} />
+              <OrderProgress history={order.statusHistory} />
             </div>
           ))
 
@@ -321,7 +383,7 @@ function StatusBadge({ status }: { status: string }) {
     in_transit: "bg-orange-200 text-orange-700",
     delivered: "bg-green-100 text-green-600",
   };
-  
+
 
   return (
     <span className={`px-3 py-1 rounded-full text-xs ${styles[status]}`}>
@@ -341,7 +403,7 @@ const formatTime = (t?: string) => {
     month: "short",
     hour: "2-digit",
     minute: "2-digit",
-     year: "2-digit"
+    year: "2-digit"
   });
 };
 function OrderProgress({ history }: { history: any[] }) {

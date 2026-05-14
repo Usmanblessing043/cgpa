@@ -58,6 +58,12 @@ type Order {
   deliveryAddress: String
   createdAt: String
 }
+  type VendorStats {
+  totalOrders: Int
+  revenue: Float
+  pendingOrders: Int
+  totalProducts: Int
+}
 
 type Query {
   posts(page: Int, limit: Int): PostPagination
@@ -71,6 +77,7 @@ type Query {
   completedRiderOrders: [Order]
   allOrders: [AdminOrder]
   adminStats: AdminStats
+  vendorStats: VendorStats
 }
 
 type Mutation {

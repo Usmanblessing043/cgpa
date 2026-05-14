@@ -14,22 +14,22 @@ export interface IUser extends Document {
   businessAddress?: string;
   businessType?: string;
 
-  
+
   vehicleType?: string;
   vehicleNumber?: string;
 
   createdAt: Date;
   updatedAt: Date;
   cart: [
-  {
-    productId: String,
-    name: String,
-    price: Number,
-    qty: Number,
-    image: String,
-  },
-],
-isBanned: Boolean
+    {
+      productId: String,
+      name: String,
+      price: Number,
+      qty: Number,
+      image: String,
+    },
+  ],
+  isBanned: Boolean
 }
 
 const userSchema = new Schema<IUser>(
@@ -59,21 +59,21 @@ const userSchema = new Schema<IUser>(
       default: "customer",
     },
     isBanned: {
-  type: Boolean,
-  default: false
-},
-    cart: {
-  type: [
-    {
-      productId: String,
-      name: String,
-      price: Number,
-      qty: Number,
-      image: String,
+      type: Boolean,
+      default: false
     },
-  ],
-  default: [],
-},
+    cart: {
+      type: [
+        {
+          productId: String,
+          name: String,
+          price: Number,
+          qty: Number,
+          image: String,
+        },
+      ],
+      default: [],
+    },
 
     phone: {
       type: String,
@@ -98,4 +98,3 @@ export const usermodel =
 
 
 
-  

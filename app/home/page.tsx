@@ -115,8 +115,10 @@ const home = () => {
                     className="px-3 md:px-5 py-2 rounded-lg text-sm md:text-base bg-gradient-to-r from-orange-600 via-orange-600 to-orange-400 text-white hover:shadow-lg">
                         Get Started
                     </button>
+                    
                 </div>
             </div>
+            di
 
             <div className="flex flex-col gap-6 md:gap-8 items-center justify-center min-h-[500px] md:h-[600px] px-4 text-center border-b border-gray-300 bg-[linear-gradient(rgba(255,255,255,0.7),rgba(255,255,255,0.7)),url('/logistic.png')]  bg-cover bg-center bg-no-repeat">
 

@@ -240,6 +240,7 @@ export default function VendorPage() {
 
         if (typeof window === "undefined") return;
 
+       // @ts-ignore
         const PaystackPop = (await import("@paystack/inline-js")).default;
 
         const paystack = new PaystackPop();

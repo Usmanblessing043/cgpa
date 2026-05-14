@@ -193,43 +193,60 @@ export const postresolvers = {
         },
 
         vendorStats: async (_: any, __: any, context: any) => {
-            if (!context.user) {
-                throw new GraphQLError("Unauthorized");
-            }
+    if (!context.user) {
+        throw new GraphQLError("Unauthorized");
+    }
 
-            const vendorId = context.user.id;
+    const vendorId = context.user.id;
 
-            const DELIVERY_FEE = 1500;
+    const DELIVERY_FEE = 1500;
 
-            const orders = await OrderModel.find({
-                vendor: vendorId,
-                status: "delivered",
-            });
+    // only accepted orders
+   const orders = await OrderModel.find({
+    vendor: vendorId,
+    status: {
+        $in: [
+            "confirmed",
+            "preparing",
+            "ready_for_pickup",
+            "accepted",
+            "in_transit",
+            "delivered",
+        ],
+    },
+});
 
-            const revenue = orders.reduce((acc, order) => {
-                return acc + (order.total - DELIVERY_FEE);
-            }, 0);
+    const revenue = orders.reduce((acc, order) => {
 
-            const totalOrders = await OrderModel.countDocuments({
-                vendor: vendorId,
-            });
+        const vendorRevenue =
+            order.total > DELIVERY_FEE
+                ? order.total - DELIVERY_FEE
+                : 0;
 
-            const pendingOrders = await OrderModel.countDocuments({
-                vendor: vendorId,
-                status: "pending",
-            });
+        return acc + vendorRevenue;
 
-            const totalProducts = await PostModel.countDocuments({
-                author: vendorId,
-            });
+    }, 0);
 
-            return {
-                totalOrders,
-                revenue,
-                pendingOrders,
-                totalProducts,
-            };
-        },
+    const totalOrders = await OrderModel.countDocuments({
+        vendor: vendorId,
+    });
+
+    const pendingOrders = await OrderModel.countDocuments({
+        vendor: vendorId,
+        status: "pending",
+    });
+
+    const totalProducts = await PostModel.countDocuments({
+        author: vendorId,
+    });
+
+    return {
+        totalOrders,
+        revenue,
+        pendingOrders,
+        totalProducts,
+    };
+},
     },
 
 
